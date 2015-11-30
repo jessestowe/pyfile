@@ -7,3 +7,4 @@ class liveFile(io.FileIO):
 		super().__init__(self, name, mode, closefd, opener)
 		self.contents = None
 		self.timestamp = None
+		# example commit to show Thom
