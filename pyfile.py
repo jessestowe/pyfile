@@ -11,7 +11,7 @@ class liveFile(io.FileIO):
 		self.seek(0)
 		return super().read().decode()
 
-	def __init__(self, name, mode="rw", closefd=True, opener=None):
+	def __init__(self, name, mode = "r", closefd=True, opener=None):
 		super().__init__(name, mode, closefd, opener)
 		self.path = name
 		self.opener = opener
@@ -22,14 +22,24 @@ class liveFile(io.FileIO):
 		return (self.getTimestamp() == self.timestamp)
 
 	def read(self):
-		if not self.isCurrent():
-			self.close()
-			self.__init__(self.name, self.mode, self.closefd, self.opener)
+		if "r" not in self.mode or not self.isCurrent():
+			self._refresh("r")
+
 		return self.contents
 
-	def write(self, value):
+	def _refresh(self, mode = "r"):
+		self.close()
+		self.__init__(self.name, mode, self.closefd, self.opener)
+
+	def write(self, value, overRide=False):
 		if not self.isCurrent():
-			self.close()
-			self.__init__(self.name, self.mode, self.closefd, self.opener)
-		self.write(value)
+			if not overRide:
+				raise IOError("WARNING: File has been modified since last opened. Call with overRide = True to over ride.")
+			self._refresh("a")
+		elif "a" not in self.mode:
+			self._refresh("a")
+		if type(value) is bytes:
+			super().write(value)
+		else:
+			super().write(value.encode())
 		
